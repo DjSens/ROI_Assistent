@@ -36,6 +36,7 @@ class InitiativeListItem(QWidget):
         super().__init__()
         self.initiative = initiative_data
         self.initiative_id = initiative_data[0]
+        self.user_vote = initiative_data[8]  # Сохраняем текущий выбор пользователя
         self.initUI()
         
     def initUI(self):
@@ -75,10 +76,10 @@ class InitiativeListItem(QWidget):
         btn_layout.setSpacing(2)
         
         # Кнопка "За"
-        btn_for = QPushButton(" 👍 ")  # 👍   btn_for = QPushButton("👍")
-        btn_for.setToolTip("Проголосовать ЗА")
-        btn_for.setFixedSize(60, 44)
-        btn_for.setStyleSheet("""
+        self.btn_for = QPushButton(" 👍 ")  # 👍   btn_for = QPushButton("👍")
+        self.btn_for.setToolTip("Проголосовать ЗА")
+        self.btn_for.setFixedSize(60, 44)
+        self.btn_for.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
                 border-radius: 6px;
@@ -88,15 +89,15 @@ class InitiativeListItem(QWidget):
                 background-color: #45a049;
             }
         """)
-        btn_for.clicked.connect(lambda: self.vote('for'))
-        btn_for.setCursor(Qt.PointingHandCursor)
-        btn_layout.addWidget(btn_for)
+        self.btn_for.clicked.connect(lambda: self.vote('for'))
+        self.btn_for.setCursor(Qt.PointingHandCursor)
+        btn_layout.addWidget(self.btn_for)
         
         # Кнопка "Против"
-        btn_against = QPushButton("👎")
-        btn_against.setToolTip("Проголосовать ПРОТИВ")
-        btn_against.setFixedSize(60, 44)
-        btn_against.setStyleSheet("""
+        self.btn_against = QPushButton("👎")
+        self.btn_against.setToolTip("Проголосовать ПРОТИВ")
+        self.btn_against.setFixedSize(60, 44)
+        self.btn_against.setStyleSheet("""
             QPushButton {
                 background-color: #f44336;
                 border-radius: 6px;
@@ -106,15 +107,15 @@ class InitiativeListItem(QWidget):
                 background-color: #da190b;
             }
         """)
-        btn_against.clicked.connect(lambda: self.vote('against'))
-        btn_against.setCursor(Qt.PointingHandCursor)
-        btn_layout.addWidget(btn_against)
+        self.btn_against.clicked.connect(lambda: self.vote('against'))
+        self.btn_against.setCursor(Qt.PointingHandCursor)
+        btn_layout.addWidget(self.btn_against)
         
         # Кнопка "Игнорировать"
-        btn_ignore = QPushButton("в игнор")
-        btn_ignore.setToolTip("Игнорировать")
-        btn_ignore.setFixedSize(120, 44)
-        btn_ignore.setStyleSheet("""
+        self.btn_ignore = QPushButton("в игнор")
+        self.btn_ignore.setToolTip("Игнорировать")
+        self.btn_ignore.setFixedSize(120, 44)
+        self.btn_ignore.setStyleSheet("""
             QPushButton {
                 background-color: #9E9E9E;
                 border-radius: 6px;
@@ -124,9 +125,9 @@ class InitiativeListItem(QWidget):
                 background-color: #757575;
             }
         """)
-        btn_ignore.clicked.connect(lambda: self.vote('ignore'))
-        btn_ignore.setCursor(Qt.PointingHandCursor)
-        btn_layout.addWidget(btn_ignore)
+        self.btn_ignore.clicked.connect(lambda: self.vote('ignore'))
+        self.btn_ignore.setCursor(Qt.PointingHandCursor)
+        btn_layout.addWidget(self.btn_ignore)
         
         layout.addLayout(btn_layout)
         
@@ -142,6 +143,9 @@ class InitiativeListItem(QWidget):
                 status_label = QLabel(status_text)
                 status_label.setStyleSheet("color: #2196F3; font-size: 9pt; padding: 2px;")
                 layout.addWidget(status_label)
+                
+                # Обновляем внешний вид кнопок в соответствии с выбором
+                self.update_buttons_appearance(self.initiative[8])
         
         # Разделитель
         line = QFrame()
@@ -165,14 +169,133 @@ class InitiativeListItem(QWidget):
             }
         """)
     
+    def update_buttons_appearance(self, vote_type):
+        """Обновление внешнего вида кнопок в зависимости от типа голоса"""
+        if vote_type == 'for':
+            # Выделить кнопку "За", остальные сделать неактивными
+            self.btn_for.setStyleSheet("""
+                QPushButton {
+                    background-color: #2E7D32;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.8;
+                }
+            """)
+            self.btn_against.setStyleSheet("""
+                QPushButton {
+                    background-color: #bdbdbd;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.5;
+                }
+            """)
+            self.btn_ignore.setStyleSheet("""
+                QPushButton {
+                    background-color: #bdbdbd;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.5;
+                }
+            """)
+        elif vote_type == 'against':
+            # Выделить кнопку "Против", остальные сделать неактивными
+            self.btn_for.setStyleSheet("""
+                QPushButton {
+                    background-color: #bdbdbd;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.5;
+                }
+            """)
+            self.btn_against.setStyleSheet("""
+                QPushButton {
+                    background-color: #C62828;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.8;
+                }
+            """)
+            self.btn_ignore.setStyleSheet("""
+                QPushButton {
+                    background-color: #bdbdbd;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.5;
+                }
+            """)
+        elif vote_type == 'ignore':
+            # Выделить кнопку "Игнорировать", остальные сделать неактивными
+            self.btn_for.setStyleSheet("""
+                QPushButton {
+                    background-color: #bdbdbd;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.5;
+                }
+            """)
+            self.btn_against.setStyleSheet("""
+                QPushButton {
+                    background-color: #bdbdbd;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.5;
+                }
+            """)
+            self.btn_ignore.setStyleSheet("""
+                QPushButton {
+                    background-color: #616161;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                    opacity: 0.8;
+                }
+            """)
+    
     def vote(self, vote_type):
         """Обработка голосования"""
-        self.voted.emit(self.initiative_id, vote_type)
-        
-        # Меняем стиль кнопок
-        for btn in self.findChildren(QPushButton):
-            btn.setEnabled(False)
-            btn.setStyleSheet(btn.styleSheet() + "opacity: 0.6;")
+        # Если пользователь нажимает ту же кнопку дважды, это отменяет выбор
+        if self.user_vote == vote_type:
+            # Отменить выбор
+            self.user_vote = None
+            # Сбросить стиль кнопок к нормальному состоянию
+            self.btn_for.setStyleSheet("""
+                QPushButton {
+                    background-color: #4CAF50;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                }
+                QPushButton:hover {
+                    background-color: #45a049;
+                }
+            """)
+            self.btn_against.setStyleSheet("""
+                QPushButton {
+                    background-color: #f44336;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                }
+                QPushButton:hover {
+                    background-color: #da190b;
+                }
+            """)
+            self.btn_ignore.setStyleSheet("""
+                QPushButton {
+                    background-color: #9E9E9E;
+                    border-radius: 6px;
+                    font-size: 11pt;
+                }
+                QPushButton:hover {
+                    background-color: #757575;
+                }
+            """)
+            # Отправить сигнал об отмене голоса
+            self.voted.emit(self.initiative_id, None)
+        else:
+            # Обновить текущий выбор
+            self.user_vote = vote_type
+            # Обновляем внешний вид кнопок
+            self.update_buttons_appearance(vote_type)
+            # Отправить сигнал о новом голосе
+            self.voted.emit(self.initiative_id, vote_type)
     
     def mousePressEvent(self, event):
         """Обработка клика по виджету"""
@@ -366,7 +489,6 @@ class MainWindow(QMainWindow):
                    full_text, proposal_text, result_text, end_date, combined_text,
                    author, initiative_status, level, created_date, source
             FROM initiatives 
-            WHERE status = 'new'
             ORDER BY added_date DESC
         ''')
         
@@ -699,12 +821,20 @@ class MainWindow(QMainWindow):
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            # Обновляем в БД
-            cursor.execute('''
-                UPDATE initiatives 
-                SET vote = ?, status = 'voted', vote_date = ?
-                WHERE id = ?
-            ''', (vote_type, datetime.now().isoformat(), initiative_id))
+            if vote_type is None:
+                # Отмена голоса - сбросить значения в БД
+                cursor.execute('''
+                    UPDATE initiatives 
+                    SET vote = NULL, status = 'new', vote_date = NULL
+                    WHERE id = ?
+                ''', (initiative_id,))
+            else:
+                # Обновляем в БД
+                cursor.execute('''
+                    UPDATE initiatives 
+                    SET vote = ?, status = 'voted', vote_date = ?
+                    WHERE id = ?
+                ''', (vote_type, datetime.now().isoformat(), initiative_id))
             
             conn.commit()
             conn.close()
@@ -713,7 +843,10 @@ class MainWindow(QMainWindow):
             self.update_stats()
             
             # Показываем сообщение
-            self.statusBar().showMessage(f'Голос сохранен: {vote_type}', 3000)
+            if vote_type is None:
+                self.statusBar().showMessage('Голос отменен', 3000)
+            else:
+                self.statusBar().showMessage(f'Голос сохранен: {vote_type}', 3000)
             
             # Обновляем отображение текущей инициативы
             if self.current_initiative_id == initiative_id:
